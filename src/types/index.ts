@@ -16,6 +16,7 @@ export interface Message {
   imageUrl?: string; // For image attachments
   timestamp: string;
   agentId?: string; // ID of the agent sending/receiving for multi-agent contexts
+  isTyping?: boolean; // Added for typing indicator
 }
 
 export interface PipelineAgentConfig {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { Agent, Message, ChatSession } from '@/types';
 import useLocalStorage from '@/hooks/use-local-storage';
@@ -10,16 +10,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bot, MessageSquare, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { chatWithAgent, type ChatInput } from '@/ai/flows/chat-flow'; // Import Genkit flow
+import { useToast } from '@/hooks/use-toast';
 
 const AGENTS_STORAGE_KEY = 'wakilPlusAgents';
 const CHAT_HISTORY_PREFIX = 'wakilPlusChatHistory_';
+
+async function fileToDataUri(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 function ChatPageContent() {
   const searchParams = useSearchParams();
   const [agents, setAgents] = useLocalStorage<Agent[]>(AGENTS_STORAGE_KEY, []);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const [currentMessages, setCurrentMessages] = useLocalStorage<Message[]>('temp-chat', []); // Temporary until agent selected
+  const [currentMessages, setCurrentMessages] = useLocalStorage<Message[]>('temp-chat', []);
   const [chatSessions, setChatSessions] = useLocalStorage<Record<string, ChatSession>>('wakilPlusChatSessions', {});
+  const [isAgentResponding, setIsAgentResponding] = useState(false);
+  const { toast } = useToast();
 
   const [isMounted, setIsMounted] = useState(false);
 
@@ -33,6 +46,17 @@ function ChatPageContent() {
     }
   }, [searchParams, agents, selectedAgentId]);
 
+  const updateChatSession = useCallback((agentId: string, messagesToSave: Message[]) => {
+    const sessionKey = `${CHAT_HISTORY_PREFIX}${agentId}`;
+    setChatSessions(prevSessions => ({
+      ...prevSessions,
+      [sessionKey]: {
+        agentId: agentId,
+        messages: messagesToSave,
+        lastUpdated: new Date().toISOString(),
+      }
+    }));
+  }, [setChatSessions]);
 
   useEffect(() => {
     if (selectedAgentId) {
@@ -44,40 +68,83 @@ function ChatPageContent() {
         setCurrentMessages([]);
       }
     } else {
-        setCurrentMessages([]); // Clear messages if no agent is selected
+        setCurrentMessages([]); 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAgentId, chatSessions]); // Do not add setCurrentMessages to deps
+  }, [selectedAgentId]); // setCurrentMessages is stable, chatSessions changes when new message is saved.
 
-  const handleSendMessage = (newMessage: Message) => {
-    if (!selectedAgentId) return;
+  const handleSendMessage = async (text: string, imageFile: File | null = null) => {
+    if (!selectedAgentId || !selectedAgent) return;
 
-    const updatedMessages = [...currentMessages, newMessage];
-    setCurrentMessages(updatedMessages);
+    setIsAgentResponding(true);
 
-    // Simulate agent response
-    setTimeout(() => {
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: text,
+      imageUrl: imageFile ? URL.createObjectURL(imageFile) : undefined,
+      timestamp: new Date().toISOString(),
+    };
+
+    const messagesWithUser = [...currentMessages, userMessage];
+    setCurrentMessages(messagesWithUser);
+
+    // Add typing indicator
+    const typingMessage: Message = {
+      id: crypto.randomUUID(),
+      role: 'agent',
+      content: 'يكتب الوكيل...',
+      timestamp: new Date().toISOString(),
+      agentId: selectedAgentId,
+      isTyping: true,
+    };
+    const messagesWithTyping = [...messagesWithUser, typingMessage];
+    setCurrentMessages(messagesWithTyping);
+
+    try {
+      let imageDataUri: string | undefined = undefined;
+      if (imageFile) {
+        imageDataUri = await fileToDataUri(imageFile);
+      }
+
+      const flowInput: ChatInput = {
+        userText: text,
+        agentSystemPrompt: selectedAgent.systemPrompt,
+        imageDataUri: imageDataUri,
+      };
+      
+      const response = await chatWithAgent(flowInput);
+
       const agentResponse: Message = {
         id: crypto.randomUUID(),
         role: 'agent',
-        content: `أنا الوكيل ${agents.find(a=>a.id === selectedAgentId)?.name}. لقد تلقيت رسالتك: "${newMessage.content}". هذا رد تجريبي.`,
+        content: response.agentResponse,
         timestamp: new Date().toISOString(),
         agentId: selectedAgentId,
       };
-      const finalMessages = [...updatedMessages, agentResponse];
-      setCurrentMessages(finalMessages);
       
-      const sessionKey = `${CHAT_HISTORY_PREFIX}${selectedAgentId}`;
-      setChatSessions(prevSessions => ({
-        ...prevSessions,
-        [sessionKey]: {
-          agentId: selectedAgentId,
-          messages: finalMessages,
-          lastUpdated: new Date().toISOString(),
-        }
-      }));
+      // Remove typing message and add actual response
+      const finalMessages = [...messagesWithUser, agentResponse];
+      setCurrentMessages(finalMessages);
+      updateChatSession(selectedAgentId, finalMessages);
 
-    }, 1000);
+    } catch (error) {
+      console.error("Error calling Genkit flow:", error);
+      toast({
+        title: "خطأ في الاتصال بالوكيل",
+        description: "حدث خطأ أثناء محاولة الحصول على رد من الوكيل. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+      });
+      // Remove typing message on error
+      setCurrentMessages(messagesWithUser); 
+      updateChatSession(selectedAgentId, messagesWithUser);
+    } finally {
+      setIsAgentResponding(false);
+      // Clean up object URL if it was created for the user message
+      if (userMessage.imageUrl && userMessage.imageUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(userMessage.imageUrl);
+      }
+    }
   };
   
   const handleAgentSelection = (agentId: string) => {
@@ -89,7 +156,6 @@ function ChatPageContent() {
       setCurrentMessages([]);
     }
   };
-
 
   if (!isMounted) {
     return <div className="flex items-center justify-center h-full"><p className="text-muted-foreground text-lg">جارٍ تحميل واجهة المحادثة...</p></div>;
@@ -106,7 +172,7 @@ function ChatPageContent() {
         </h1>
         {agents.length > 0 && (
            <div className="w-full sm:w-72">
-            <Select value={selectedAgentId || ""} onValueChange={handleAgentSelection}>
+            <Select value={selectedAgentId || ""} onValueChange={handleAgentSelection} disabled={isAgentResponding}>
               <SelectTrigger className="w-full bg-card">
                 <SelectValue placeholder="اختر وكيلاً للمحادثة..." />
               </SelectTrigger>
@@ -155,6 +221,7 @@ function ChatPageContent() {
               agent={selectedAgent}
               messages={currentMessages}
               onSendMessage={handleSendMessage}
+              isAgentResponding={isAgentResponding}
             />
           </CardContent>
         </Card>
@@ -162,7 +229,6 @@ function ChatPageContent() {
     </div>
   );
 }
-
 
 export default function ChatPage() {
   return (

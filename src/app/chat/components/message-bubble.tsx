@@ -3,7 +3,7 @@
 import type { Message } from '@/types';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Bot } from 'lucide-react';
+import { User, Bot, Loader2 } from 'lucide-react';
 import MarkdownRenderer from '@/components/common/markdown-renderer';
 import Image from 'next/image';
 
@@ -16,6 +16,18 @@ interface MessageBubbleProps {
 export default function MessageBubble({ message, agentName, agentAvatar }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const fallbackAvatarText = isUser ? "أنت" : agentName?.substring(0,1) || "W";
+
+  const renderContent = () => {
+    if (message.isTyping) {
+      return (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>{message.content}</span>
+        </div>
+      );
+    }
+    return <MarkdownRenderer content={message.content || ''} />;
+  }
 
   return (
     <div
@@ -45,13 +57,15 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
       >
         {message.imageUrl && (
           <div className="mb-2">
-            <Image src={message.imageUrl} alt="Attached image" width={200} height={200} className="rounded-md max-w-full h-auto object-contain" />
+            <Image src={message.imageUrl} alt="Attached image" width={200} height={200} className="rounded-md max-w-full h-auto object-contain" data-ai-hint="user upload" />
           </div>
         )}
-        {message.content && <MarkdownRenderer content={message.content} />}
-        <p className={cn("text-xs mt-1", isUser ? "text-accent-foreground/70" : "text-muted-foreground/70")}>
-          {new Date(message.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-        </p>
+        {renderContent()}
+        {!message.isTyping && (
+          <p className={cn("text-xs mt-1", isUser ? "text-accent-foreground/70" : "text-muted-foreground/70")}>
+            {new Date(message.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        )}
       </div>
     </div>
   );
