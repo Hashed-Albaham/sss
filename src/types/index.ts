@@ -1,0 +1,39 @@
+export interface Agent {
+  id: string;
+  name: string;
+  description: string;
+  systemPrompt: string;
+  avatarUrl?: string; // Optional: URL to an avatar image
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Message {
+  id: string;
+  role: 'user' | 'agent' | 'system';
+  content: string;
+  imageUrl?: string; // For image attachments
+  timestamp: string;
+  agentId?: string; // ID of the agent sending/receiving for multi-agent contexts
+}
+
+export interface PipelineAgentConfig {
+  agentId: string;
+  // Specific configurations for this agent in the pipeline if needed
+}
+
+export interface Pipeline {
+  id: string;
+  name: string;
+  description: string;
+  agentSequence: PipelineAgentConfig[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// For chat history storage
+export interface ChatSession {
+  agentId: string;
+  messages: Message[];
+  lastUpdated: string;
+}
