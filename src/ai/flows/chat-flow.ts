@@ -62,8 +62,8 @@ const chatWithAgentFlow = globalAi.defineFlow(
       // Create a temporary Genkit instance with the agent's specific API key
       const agentAi = genkit({
         plugins: [googleAI({ apiKey: input.agentApiKey })],
-        // Use the model configuration from the global AI instance, or make it configurable per agent
-        model: globalAi.getModel('googleai/gemini-2.0-flash'), 
+        // Use the same model identifier string as the global AI instance.
+        model: 'googleai/gemini-2.0-flash', 
       });
 
       // Define the prompt using this temporary Genkit instance
@@ -96,3 +96,4 @@ Agent:`,
     return responseOutput;
   }
 );
+
