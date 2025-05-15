@@ -1,11 +1,15 @@
+
 'use client';
 
 import type { Message } from '@/types';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Bot, Loader2 } from 'lucide-react';
+import { User, Bot, Loader2, Copy, Check } from 'lucide-react';
 import MarkdownRenderer from '@/components/common/markdown-renderer';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
 
 interface MessageBubbleProps {
   message: Message;
@@ -16,6 +20,29 @@ interface MessageBubbleProps {
 export default function MessageBubble({ message, agentName, agentAvatar }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const fallbackAvatarText = isUser ? "أنت" : agentName?.substring(0,1) || "W";
+  const { toast } = useToast();
+  const [isCopied, setIsCopied] = useState(false);
+  const [showCopyButton, setShowCopyButton] = useState(false);
+
+  const handleCopy = async () => {
+    if (message.isTyping || !message.content) return;
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setIsCopied(true);
+      toast({
+        title: "تم النسخ!",
+        description: "تم نسخ محتوى الرسالة إلى الحافظة.",
+      });
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      toast({
+        title: "فشل النسخ",
+        description: "لم نتمكن من نسخ الرسالة. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const renderContent = () => {
     if (message.isTyping) {
@@ -32,9 +59,11 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
   return (
     <div
       className={cn(
-        'flex items-end gap-3 max-w-[85%] sm:max-w-[75%]',
+        'group relative flex items-end gap-3 max-w-[85%] sm:max-w-[75%]', // Added 'group' and 'relative'
         isUser ? 'ms-auto flex-row-reverse' : 'me-auto'
       )}
+      onMouseEnter={() => setShowCopyButton(true)}
+      onMouseLeave={() => setShowCopyButton(false)}
     >
       <Avatar className="h-8 w-8 shrink-0 border">
         {isUser ? (
@@ -52,7 +81,7 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
       <div
         className={cn(
           'p-3 rounded-lg shadow-md break-words',
-          isUser ? 'bg-accent text-accent-foreground rounded-es-none' : 'bg-muted text-muted-foreground rounded-ss-none'
+          isUser ? 'bg-accent text-accent-foreground rounded-es-none' : 'bg-card text-card-foreground border border-border rounded-ss-none' // Updated agent bubble for better theme compatibility
         )}
       >
         {message.imageUrl && (
@@ -67,6 +96,20 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
           </p>
         )}
       </div>
+      {showCopyButton && !message.isTyping && message.content && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "absolute top-1 h-7 w-7 p-1 rounded-full bg-background/50 hover:bg-background text-muted-foreground hover:text-foreground transition-opacity opacity-0 group-hover:opacity-100",
+            isUser ? "left-0 -translate-x-full ml-1 md:left-auto md:right-full md:translate-x-0 md:mr-1" : "right-0 translate-x-full mr-1 md:right-auto md:left-full md:translate-x-0 md:ml-1"
+          )}
+          onClick={handleCopy}
+          aria-label="نسخ الرسالة"
+        >
+          {isCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+        </Button>
+      )}
     </div>
   );
 }

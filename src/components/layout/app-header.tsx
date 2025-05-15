@@ -1,5 +1,7 @@
+
 import Link from 'next/link';
-import { BotIcon } from 'lucide-react'; // Using BotIcon as a generic agent/app icon
+import { BotIcon } from 'lucide-react'; 
+import { ThemeToggleButton } from './theme-toggle-button';
 
 export function AppHeader() {
   return (
@@ -9,13 +11,10 @@ export function AppHeader() {
           <BotIcon className="h-7 w-7 text-primary" />
           <span className="text-xl font-bold text-foreground">وكيل بلس</span>
         </Link>
-        {/* Placeholder for future actions like theme toggle or user menu */}
-        {/* <nav className="flex items-center gap-4">
-          <Button variant="ghost" size="icon">
-            <Settings className="h-5 w-5" />
-            <span className="sr-only">Settings</span>
-          </Button>
-        </nav> */}
+        <div className="flex items-center gap-4">
+          <ThemeToggleButton />
+          {/* Placeholder for future actions like user menu */}
+        </div>
       </div>
     </header>
   );

@@ -1,7 +1,8 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
-    darkMode: ["class"], // Though the base theme is dark, this allows for explicit dark mode if ever needed.
+    darkMode: ["class"], 
     content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -17,7 +18,7 @@ export default {
     },
   	extend: {
       fontFamily: {
-        sans: ["var(--font-cairo)", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"], // Changed from --font-noto-sans
+        sans: ["var(--font-cairo)", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"],
       },
   		colors: {
   			background: 'hsl(var(--background))',
@@ -97,7 +98,37 @@ export default {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
+  		},
+      typography: (theme: (path: string) => any) => ({
+        DEFAULT: {
+          css: {
+            '--tw-prose-body': theme('colors.foreground / 1'),
+            '--tw-prose-headings': theme('colors.foreground / 1'),
+            '--tw-prose-lead': theme('colors.muted.foreground / 1'),
+            '--tw-prose-links': theme('colors.primary / 1'),
+            '--tw-prose-bold': theme('colors.foreground / 1'),
+            '--tw-prose-counters': theme('colors.muted.foreground / 1'),
+            '--tw-prose-bullets': theme('colors.muted.foreground / 1'),
+            '--tw-prose-hr': theme('colors.border / 1'),
+            '--tw-prose-quotes': theme('colors.foreground / 1'),
+            '--tw-prose-quote-borders': theme('colors.primary / 1'),
+            '--tw-prose-captions': theme('colors.muted.foreground / 1'),
+            '--tw-prose-code': theme('colors.foreground / 1'), // Text color for inline code
+            '--tw-prose-pre-code': theme('colors.card.foreground / 1'), // Text color for code blocks
+            '--tw-prose-pre-bg': theme('colors.card / 0.8'),    // Background for code blocks
+            '--tw-prose-th-borders': theme('colors.border / 1'),
+            '--tw-prose-td-borders': theme('colors.border / 1'),
+             // Dark mode handled by dark:prose-invert, but we can provide specific dark vars if needed.
+            '--tw-prose-invert-body': theme('colors.foreground / 1'), // This would be dark mode body
+            '--tw-prose-invert-headings': theme('colors.foreground / 1'),
+            '--tw-prose-invert-links': theme('colors.primary / 1'),
+            // ... and so on for all prose variables if fine-grained dark mode control is needed beyond invert
+            '--tw-prose-invert-code': theme('colors.foreground / 1'),
+            '--tw-prose-invert-pre-code': theme('colors.popover.foreground / 1'),
+            '--tw-prose-invert-pre-bg': 'rgba(50,50,50,0.7)', // A sample dark pre background
+          },
+        },
+      }),
   	}
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
