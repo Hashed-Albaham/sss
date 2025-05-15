@@ -10,7 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import type { Agent } from '@/types';
-import { chatPrompt, ChatInputSchema, ChatOutputSchema, type ChatInput, type ChatOutput } from './chat-flow'; // Reusing chatPrompt
+import { chatWithAgent, type ChatInput, type ChatOutput } from './chat-flow'; // Reusing chatWithAgent function
 
 const AgentInputSchema = z.object({
   id: z.string(),
@@ -64,9 +64,10 @@ const compareAgentsFlow = ai.defineFlow(
             agentSystemPrompt: agent.systemPrompt,
             imageDataUri,
           };
-          const { output } = await chatPrompt(chatInput);
+          // Use the chatWithAgent function instead of the direct prompt
+          const output: ChatOutput = await chatWithAgent(chatInput);
           
-          if (!output) {
+          if (!output || typeof output.agentResponse === 'undefined') { // Check if agentResponse exists
             throw new Error("لم يتم استلام أي مخرجات من الوكيل.");
           }
 
