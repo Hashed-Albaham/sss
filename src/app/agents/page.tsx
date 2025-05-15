@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -49,7 +50,6 @@ export default function AgentsPage() {
   };
 
   if (!isMounted) {
-    // Render skeleton or loading state here if needed
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -80,12 +80,14 @@ export default function AgentsPage() {
               إنشاء وكيل جديد
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] bg-card">
+          {/* Added max-h-[90vh] and overflow-y-auto to DialogContent for scrollability */}
+          <DialogContent className="sm:max-w-[600px] bg-card max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-primary text-2xl">
                 {editingAgent ? 'تعديل الوكيل' : 'إنشاء وكيل جديد'}
               </DialogTitle>
             </DialogHeader>
+            {/* AgentForm is now a direct child, its content will scroll if DialogContent overflows */}
             <AgentForm
               agent={editingAgent}
               onSave={handleSaveAgent}
