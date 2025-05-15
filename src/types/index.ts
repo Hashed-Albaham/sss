@@ -3,6 +3,7 @@ export interface Agent {
   name: string;
   description: string;
   systemPrompt: string;
+  apiKey?: string; // Optional: API key for the agent
   avatarUrl?: string; // Optional: URL to an avatar image
   createdAt: string;
   updatedAt: string;

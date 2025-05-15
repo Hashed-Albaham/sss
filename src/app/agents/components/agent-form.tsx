@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Save, XCircle } from 'lucide-react';
+import { Save, XCircle, KeyRound } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -30,6 +30,7 @@ const agentSchema = z.object({
   name: z.string().min(1, { message: "اسم الوكيل مطلوب" }).max(50, { message: "الاسم طويل جداً" }),
   description: z.string().max(200, { message: "الوصف طويل جداً" }).optional(),
   systemPrompt: z.string().min(1, { message: "الموجه النظامي مطلوب" }),
+  apiKey: z.string().optional().or(z.literal('')),
   avatarUrl: z.string().url({ message: "الرابط غير صحيح" }).optional().or(z.literal('')),
 });
 
@@ -42,6 +43,7 @@ export default function AgentForm({ agent, onSave, onCancel }: AgentFormProps) {
       name: agent?.name || '',
       description: agent?.description || '',
       systemPrompt: agent?.systemPrompt || '',
+      apiKey: agent?.apiKey || '',
       avatarUrl: agent?.avatarUrl || '',
     },
   });
@@ -52,6 +54,7 @@ export default function AgentForm({ agent, onSave, onCancel }: AgentFormProps) {
         name: agent.name,
         description: agent.description || '',
         systemPrompt: agent.systemPrompt,
+        apiKey: agent.apiKey || '',
         avatarUrl: agent.avatarUrl || '',
       });
     } else {
@@ -59,6 +62,7 @@ export default function AgentForm({ agent, onSave, onCancel }: AgentFormProps) {
         name: '',
         description: '',
         systemPrompt: '',
+        apiKey: '',
         avatarUrl: '',
       });
     }
@@ -71,6 +75,7 @@ export default function AgentForm({ agent, onSave, onCancel }: AgentFormProps) {
       id: agent?.id || crypto.randomUUID(),
       ...data,
       description: data.description || '', // ensure description is not undefined
+      apiKey: data.apiKey || undefined, // ensure empty string becomes undefined
       avatarUrl: data.avatarUrl || undefined, // ensure empty string becomes undefined
       createdAt: agent?.createdAt || now,
       updatedAt: now,
@@ -121,6 +126,23 @@ export default function AgentForm({ agent, onSave, onCancel }: AgentFormProps) {
                   className="min-h-[120px]"
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="apiKey"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-1">
+                <KeyRound className="h-4 w-4 text-muted-foreground" />
+                مفتاح API (اختياري)
+              </FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="أدخل مفتاح API هنا (إن وجد)" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
