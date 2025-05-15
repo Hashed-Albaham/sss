@@ -39,3 +39,19 @@ export interface ChatSession {
   messages: Message[];
   lastUpdated: string;
 }
+
+// For Agent Comparison Feature
+export interface CompareAgentsUserInput {
+  agents: Agent[];
+  userText: string;
+  imageDataUri?: string;
+}
+
+export interface CompareAgentsResultItem {
+  agentId: string;
+  agentName: string;
+  avatarUrl?: string;
+  agentResponse?: string;
+  error?: string;
+  isLoading: boolean; // Added to track individual agent loading state
+}

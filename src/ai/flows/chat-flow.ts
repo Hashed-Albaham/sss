@@ -5,12 +5,15 @@
  * - chatWithAgent - A function that takes user input and agent system prompt, returns agent response.
  * - ChatInput - The input type for the chatWithAgent function.
  * - ChatOutput - The return type for the chatWithAgent function.
+ * - chatPrompt - The Genkit prompt object for chat.
+ * - ChatInputSchema - Zod schema for chat input.
+ * - ChatOutputSchema - Zod schema for chat output.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const ChatInputSchema = z.object({
+export const ChatInputSchema = z.object({
   userText: z.string().describe('The text message from the user.'),
   agentSystemPrompt: z.string().describe('The system prompt defining the agent\'s personality and instructions.'),
   imageDataUri: z.string().optional().describe(
@@ -19,7 +22,7 @@ const ChatInputSchema = z.object({
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
-const ChatOutputSchema = z.object({
+export const ChatOutputSchema = z.object({
   agentResponse: z.string().describe('The text response from the agent.'),
 });
 export type ChatOutput = z.infer<typeof ChatOutputSchema>;
@@ -28,7 +31,7 @@ export async function chatWithAgent(input: ChatInput): Promise<ChatOutput> {
   return chatWithAgentFlow(input);
 }
 
-const chatPrompt = ai.definePrompt({
+export const chatPrompt = ai.definePrompt({
   name: 'chatWithAgentPrompt',
   input: {schema: ChatInputSchema},
   output: {schema: ChatOutputSchema},
