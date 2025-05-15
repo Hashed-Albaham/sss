@@ -8,13 +8,16 @@ import PipelineForm from './components/pipeline-form';
 import PipelineCard from './components/pipeline-card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription as ShadCardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Renamed CardDescription to avoid conflict
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlusCircle, Share2, Play, Loader2, AlertTriangle, Info, ChevronsRight, Send } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog'; // Added DialogDescription
 import { useToast } from '@/hooks/use-toast';
 import { executePipeline } from '@/ai/flows/execute-pipeline-flow';
 import MarkdownRenderer from '@/components/common/markdown-renderer';
+import Link from 'next/link'; // Added Link import
+import { Label } from '@/components/ui/label'; // Added Label import
+
 
 const PIPELINES_STORAGE_KEY = 'wakilPlusPipelines';
 const AGENTS_STORAGE_KEY = 'wakilPlusAgents';
@@ -84,7 +87,11 @@ function PipelinesPageContent() {
     // Prepare agents data for the flow
     const agentsInSequenceForFlow: PipelineExecutionFlowAgent[] = selectedPipelineForExecution.agentSequence.map(config => {
       const agent = allAgents.find(a => a.id === config.agentId);
-      if (!agent) throw new Error(`لم يتم العثور على الوكيل بالمعرف: ${config.agentId}`); // Should not happen if data is consistent
+      if (!agent) {
+        // This case should ideally be prevented by UI, but good to have a fallback
+        toast({ title: "خطأ في تكوين خط الأنابيب", description: `لم يتم العثور على الوكيل بالمعرف: ${config.agentId}`, variant: "destructive" });
+        throw new Error(`لم يتم العثور على الوكيل بالمعرف: ${config.agentId}`);
+      }
       return {
         agentId: agent.id,
         name: agent.name,
@@ -154,13 +161,13 @@ function PipelinesPageContent() {
           if (!isOpen) setEditingPipeline(null);
         }}>
           <DialogTrigger asChild>
-            <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={allAgents.length === 0}>
+            <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90" disabled={allAgents.length === 0 && isMounted}>
               <PlusCircle className="me-2 h-5 w-5" />
               إنشاء خط أنابيب جديد
             </Button>
           </DialogTrigger>
-           {allAgents.length === 0 && isMounted && (
-             <p className="text-sm text-destructive text-end sm:text-start mt-1">
+           {allAgents.length === 0 && isMounted && !showPipelineForm && ( // Only show if form is not open
+             <p className="text-sm text-destructive text-end sm:text-start mt-1 w-full sm:w-auto">
                <Link href="/agents" className="underline hover:text-destructive/80">أنشئ بعض الوكلاء</Link> أولاً لتتمكن من إنشاء خط أنابيب.
              </p>
            )}
@@ -289,7 +296,7 @@ function PipelinesPageContent() {
 
 
       {/* Display Pipelines */}
-      {pipelines.length === 0 && !showPipelineForm ? (
+      {pipelines.length === 0 && !showPipelineForm && isMounted ? ( // Added isMounted check
         <div className="text-center py-12">
           <Share2 className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
           <p className="text-xl text-muted-foreground">لا يوجد خطوط أنابيب حتى الآن.</p>
@@ -321,3 +328,4 @@ export default function PipelinesPage() {
     <PipelinesPageContent />
   );
 }
+
