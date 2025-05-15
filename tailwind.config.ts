@@ -17,7 +17,7 @@ export default {
     },
   	extend: {
       fontFamily: {
-        sans: ["var(--font-noto-sans)", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"], // Changed from --font-geist-sans
+        sans: ["var(--font-cairo)", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"], // Changed from --font-noto-sans
       },
   		colors: {
   			background: 'hsl(var(--background))',
