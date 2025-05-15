@@ -10,14 +10,14 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import type { Agent } from '@/types';
-import { chatWithAgent, type ChatInput, type ChatOutput } from './chat-flow'; // Reusing chatWithAgent function
+import { chatWithAgent, type ChatInput, type ChatOutput } from './chat-flow'; 
 
 const AgentInputSchema = z.object({
   id: z.string(),
   name: z.string(),
   systemPrompt: z.string(),
   avatarUrl: z.string().optional(),
-  // We don't need other Agent fields like createdAt, apiKey for the flow's core logic
+  apiKey: z.string().optional(), // Added apiKey to be passed from agent data
 });
 
 export const CompareAgentsFlowInputSchema = z.object({
@@ -63,11 +63,12 @@ const compareAgentsFlow = ai.defineFlow(
             userText,
             agentSystemPrompt: agent.systemPrompt,
             imageDataUri,
+            agentApiKey: agent.apiKey, // Pass the agent's specific API key
           };
-          // Use the chatWithAgent function instead of the direct prompt
+          
           const output: ChatOutput = await chatWithAgent(chatInput);
           
-          if (!output || typeof output.agentResponse === 'undefined') { // Check if agentResponse exists
+          if (!output || typeof output.agentResponse === 'undefined') { 
             throw new Error("لم يتم استلام أي مخرجات من الوكيل.");
           }
 

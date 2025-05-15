@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import type { Agent, CompareAgentsResultItem, CompareAgentsUserInput } from '@/types';
+import { useState, useEffect, Suspense, useRef } from 'react';
+import type { Agent, CompareAgentsResultItem } from '@/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,8 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { GitCompareArrows, Send, Paperclip, Loader2, AlertTriangle, User, Bot } from 'lucide-react';
+// import { Input } from '@/components/ui/input'; // Not used currently for prompt
+import { GitCompareArrows, Send, Paperclip, Loader2, AlertTriangle, User, Bot, Users as UsersIcon } from 'lucide-react'; // Renamed Users to UsersIcon
 import { useToast } from '@/hooks/use-toast';
 import { compareMultipleAgents, type CompareAgentsFlowInput } from '@/ai/flows/compare-agents-flow';
 import MarkdownRenderer from '@/components/common/markdown-renderer';
@@ -28,13 +28,35 @@ async function fileToDataUri(file: File): Promise<string> {
   });
 }
 
+// Simple XIcon for removing image preview
+function XIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  )
+}
+
+
 function ComparePageContent() {
   const [allAgents, setAllAgents] = useLocalStorage<Agent[]>(AGENTS_STORAGE_KEY, []);
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
   const [promptText, setPromptText] = useState('');
   const [attachedImage, setAttachedImage] = useState<File | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [comparisonResults, setComparisonResults] = useState<CompareAgentsResultItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +68,6 @@ function ComparePageContent() {
   }, []);
   
   useEffect(() => {
-    // Clean up object URL for image preview
     return () => {
       if (imagePreviewUrl) {
         URL.revokeObjectURL(imagePreviewUrl);
@@ -70,7 +91,7 @@ function ComparePageContent() {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       setAttachedImage(file);
-      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl); // Revoke old one if exists
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl); 
       setImagePreviewUrl(URL.createObjectURL(file));
     }
   };
@@ -95,7 +116,6 @@ function ComparePageContent() {
     setIsLoading(true);
     const agentsToCompare = allAgents.filter(agent => selectedAgentIds.has(agent.id));
     
-    // Initialize results with loading state for selected agents
     setComparisonResults(agentsToCompare.map(agent => ({
       agentId: agent.id,
       agentName: agent.name,
@@ -110,7 +130,7 @@ function ComparePageContent() {
       }
 
       const flowInput: CompareAgentsFlowInput = {
-        agents: agentsToCompare.map(({ id, name, systemPrompt, avatarUrl }) => ({ id, name, systemPrompt, avatarUrl })),
+        agents: agentsToCompare.map(({ id, name, systemPrompt, avatarUrl, apiKey }) => ({ id, name, systemPrompt, avatarUrl, apiKey })), // Pass apiKey
         userText: promptText,
         imageDataUri,
       };
@@ -125,7 +145,6 @@ function ComparePageContent() {
         description: error.message || "حدث خطأ غير متوقع أثناء مقارنة الوكلاء.",
         variant: "destructive",
       });
-      // Set error for all agents that were supposed to be loading
        setComparisonResults(prevResults => prevResults.map(r => 
         r.isLoading ? { ...r, isLoading: false, error: "فشلت عملية المقارنة العامة."} : r
       ));
@@ -157,7 +176,6 @@ function ComparePageContent() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Configuration Panel */}
         <Card className="lg:col-span-1 bg-card border-border sticky top-20">
           <CardHeader>
             <CardTitle className="text-xl text-card-foreground">إعدادات المقارنة</CardTitle>
@@ -248,9 +266,8 @@ function ComparePageContent() {
           </CardFooter>
         </Card>
 
-        {/* Results Panel */}
         <div className="lg:col-span-2 space-y-6">
-          {isLoading && comparisonResults.length === 0 && ( // Initial loading before any results structure
+          {isLoading && comparisonResults.length === 0 && ( 
             <Card className="bg-card border-border">
               <CardContent className="p-6 text-center">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
@@ -288,7 +305,7 @@ function ComparePageContent() {
                       <p className="text-sm">{result.error}</p>
                     </div>
                   ) : (
-                    <ScrollArea className="h-64"> {/* Max height for response */}
+                    <ScrollArea className="h-64"> 
                        <MarkdownRenderer content={result.agentResponse || "لم يتم تقديم أي رد."} />
                     </ScrollArea>
                   )}
@@ -307,7 +324,7 @@ function ComparePageContent() {
             { !isLoading && comparisonResults.length === 0 && selectedAgentIds.size === 0 && allAgents.length > 0 && (
              <Card className="bg-card border-border">
                 <CardContent className="p-6 text-center">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <UsersIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-lg text-muted-foreground">اختر بعض الوكلاء من اللوحة اليسرى لبدء المقارنة.</p>
                 </CardContent>
             </Card>
@@ -316,28 +333,6 @@ function ComparePageContent() {
       </div>
     </div>
   );
-}
-
-
-// Simple XIcon for removing image preview
-function XIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </svg>
-  )
 }
 
 export default function ComparePage() {
@@ -351,27 +346,4 @@ export default function ComparePage() {
       <ComparePageContent />
     </Suspense>
   );
-}
-
-// Helper Users icon for empty state
-function Users(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  )
 }

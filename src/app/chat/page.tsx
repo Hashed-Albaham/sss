@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bot, MessageSquare, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { chatWithAgent, type ChatInput } from '@/ai/flows/chat-flow'; // Import Genkit flow
+import { chatWithAgent, type ChatInput } from '@/ai/flows/chat-flow'; 
 import { useToast } from '@/hooks/use-toast';
 
 const AGENTS_STORAGE_KEY = 'wakilPlusAgents';
@@ -71,7 +71,9 @@ function ChatPageContent() {
         setCurrentMessages([]); 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAgentId]); // setCurrentMessages is stable, chatSessions changes when new message is saved.
+  }, [selectedAgentId]); 
+
+  const selectedAgent = agents.find(agent => agent.id === selectedAgentId);
 
   const handleSendMessage = async (text: string, imageFile: File | null = null) => {
     if (!selectedAgentId || !selectedAgent) return;
@@ -89,7 +91,6 @@ function ChatPageContent() {
     const messagesWithUser = [...currentMessages, userMessage];
     setCurrentMessages(messagesWithUser);
 
-    // Add typing indicator
     const typingMessage: Message = {
       id: crypto.randomUUID(),
       role: 'agent',
@@ -111,6 +112,7 @@ function ChatPageContent() {
         userText: text,
         agentSystemPrompt: selectedAgent.systemPrompt,
         imageDataUri: imageDataUri,
+        agentApiKey: selectedAgent.apiKey, // Pass the agent's API key
       };
       
       const response = await chatWithAgent(flowInput);
@@ -123,7 +125,6 @@ function ChatPageContent() {
         agentId: selectedAgentId,
       };
       
-      // Remove typing message and add actual response
       const finalMessages = [...messagesWithUser, agentResponse];
       setCurrentMessages(finalMessages);
       updateChatSession(selectedAgentId, finalMessages);
@@ -135,12 +136,10 @@ function ChatPageContent() {
         description: "حدث خطأ أثناء محاولة الحصول على رد من الوكيل. يرجى المحاولة مرة أخرى.",
         variant: "destructive",
       });
-      // Remove typing message on error
       setCurrentMessages(messagesWithUser); 
       updateChatSession(selectedAgentId, messagesWithUser);
     } finally {
       setIsAgentResponding(false);
-      // Clean up object URL if it was created for the user message
       if (userMessage.imageUrl && userMessage.imageUrl.startsWith('blob:')) {
         URL.revokeObjectURL(userMessage.imageUrl);
       }
@@ -161,8 +160,6 @@ function ChatPageContent() {
     return <div className="flex items-center justify-center h-full"><p className="text-muted-foreground text-lg">جارٍ تحميل واجهة المحادثة...</p></div>;
   }
   
-  const selectedAgent = agents.find(agent => agent.id === selectedAgentId);
-
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] gap-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
