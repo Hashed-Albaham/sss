@@ -9,6 +9,7 @@ import AgentCard from './components/agent-card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area'; // استيراد ScrollArea
 import { useToast } from '@/hooks/use-toast';
 
 const AGENTS_STORAGE_KEY = 'wakilPlusAgents';
@@ -80,22 +81,24 @@ export default function AgentsPage() {
               إنشاء وكيل جديد
             </Button>
           </DialogTrigger>
-          {/* Added max-h-[90vh] and overflow-y-auto to DialogContent for scrollability */}
-          <DialogContent className="sm:max-w-[600px] bg-card max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[600px] bg-card max-h-[90vh] flex flex-col"> {/* تعديل هنا */}
             <DialogHeader>
               <DialogTitle className="text-primary text-2xl">
                 {editingAgent ? 'تعديل الوكيل' : 'إنشاء وكيل جديد'}
               </DialogTitle>
             </DialogHeader>
-            {/* AgentForm is now a direct child, its content will scroll if DialogContent overflows */}
-            <AgentForm
-              agent={editingAgent}
-              onSave={handleSaveAgent}
-              onCancel={() => {
-                setShowForm(false);
-                setEditingAgent(null);
-              }}
-            />
+            <ScrollArea className="flex-grow min-h-0"> {/* إضافة ScrollArea */}
+              <div className="p-6 pt-2"> {/*  إضافة padding داخلي لتعويض p-6 الخاص بـ DialogContent إذا لزم الأمر، أو الاعتماد على padding النموذج */}
+                <AgentForm
+                  agent={editingAgent}
+                  onSave={handleSaveAgent}
+                  onCancel={() => {
+                    setShowForm(false);
+                    setEditingAgent(null);
+                  }}
+                />
+              </div>
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </div>
