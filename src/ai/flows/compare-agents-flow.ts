@@ -20,7 +20,7 @@ const AgentInputSchema = z.object({
   apiKey: z.string().optional(), // Added apiKey to be passed from agent data
 });
 
-export const CompareAgentsFlowInputSchema = z.object({
+const CompareAgentsFlowInputSchema = z.object({
   agents: z.array(AgentInputSchema).min(1, "يجب تحديد وكيل واحد على الأقل للمقارنة."),
   userText: z.string().describe('The text message from the user.'),
   imageDataUri: z.string().optional().describe(
@@ -29,7 +29,7 @@ export const CompareAgentsFlowInputSchema = z.object({
 });
 export type CompareAgentsFlowInput = z.infer<typeof CompareAgentsFlowInputSchema>;
 
-export const CompareAgentsFlowOutputSchema = z.object({
+const CompareAgentsFlowOutputSchema = z.object({
   results: z.array(
     z.object({
       agentId: z.string(),
