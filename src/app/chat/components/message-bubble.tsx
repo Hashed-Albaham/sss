@@ -22,7 +22,6 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
   const fallbackAvatarText = isUser ? "أنت" : agentName?.substring(0,1) || "W";
   const { toast } = useToast();
   const [isCopied, setIsCopied] = useState(false);
-  const [showCopyButton, setShowCopyButton] = useState(false);
 
   const handleCopy = async () => {
     if (message.isTyping || !message.content) return;
@@ -59,11 +58,9 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
   return (
     <div
       className={cn(
-        'group relative flex items-end gap-3 max-w-[85%] sm:max-w-[75%]', // Added 'group' and 'relative'
+        'group flex items-end gap-3 max-w-[85%] sm:max-w-[75%]',
         isUser ? 'ms-auto flex-row-reverse' : 'me-auto'
       )}
-      onMouseEnter={() => setShowCopyButton(true)}
-      onMouseLeave={() => setShowCopyButton(false)}
     >
       <Avatar className="h-8 w-8 shrink-0 border">
         {isUser ? (
@@ -81,7 +78,7 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
       <div
         className={cn(
           'p-3 rounded-lg shadow-md break-words',
-          isUser ? 'bg-accent text-accent-foreground rounded-es-none' : 'bg-card text-card-foreground border border-border rounded-ss-none' // Updated agent bubble for better theme compatibility
+          isUser ? 'bg-accent text-accent-foreground rounded-es-none' : 'bg-card text-card-foreground border border-border rounded-ss-none'
         )}
       >
         {message.imageUrl && (
@@ -90,26 +87,39 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
           </div>
         )}
         {renderContent()}
+        
         {!message.isTyping && (
-          <p className={cn("text-xs mt-1", isUser ? "text-accent-foreground/70" : "text-muted-foreground/70")}>
-            {new Date(message.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
-          </p>
+          <div className={cn(
+            "flex items-center text-xs mt-1.5",
+             // For RTL, justify-start will place items to the right.
+             // If the bubble is on the right (user), items appear on its right edge.
+             // If the bubble is on the left (agent), items appear on its right edge.
+             // This seems to align with how timestamps are usually shown in RTL chat.
+            "justify-start" 
+          )}>
+            <p className={cn( isUser ? "text-accent-foreground/70" : "text-muted-foreground/70" )}>
+              {new Date(message.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+            {message.content && ( // Only show copy for messages with content
+              <Button
+                variant="ghost"
+                size="sm" 
+                className={cn(
+                  "p-1 h-auto rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity",
+                  "ms-2", // Margin start, works for RTL to put it after the timestamp
+                  isCopied ? 
+                    "text-primary" : 
+                    (isUser ? "text-accent-foreground/80 hover:text-accent-foreground" : "text-muted-foreground/80 hover:text-foreground")
+                )}
+                onClick={handleCopy}
+                aria-label="نسخ الرسالة"
+              >
+                {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            )}
+          </div>
         )}
       </div>
-      {showCopyButton && !message.isTyping && message.content && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn(
-            "absolute top-1 h-7 w-7 p-1 rounded-full bg-background/50 hover:bg-background text-muted-foreground hover:text-foreground transition-opacity opacity-0 group-hover:opacity-100",
-            isUser ? "left-0 -translate-x-full ml-1 md:left-auto md:right-full md:translate-x-0 md:mr-1" : "right-0 translate-x-full mr-1 md:right-auto md:left-full md:translate-x-0 md:ml-1"
-          )}
-          onClick={handleCopy}
-          aria-label="نسخ الرسالة"
-        >
-          {isCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-        </Button>
-      )}
     </div>
   );
 }
