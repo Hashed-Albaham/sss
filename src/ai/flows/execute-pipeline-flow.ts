@@ -98,7 +98,7 @@ const executePipelineFlow = ai.defineFlow(
         stepResult.error = e.message || "حدث خطأ غير معروف أثناء معالجة هذا الوكيل في خط الأنابيب.";
         results.push({ ...stepResult, durationMs: Date.now() - startTime });
         return {
-          initialInputText,
+          initialInputText: initialUserText, // Use the variable from input
           initialImageDataUri,
           steps: results,
           overallError: `فشل خط الأنابيب عند الوكيل: ${agentConfig.name}. الخطأ: ${stepResult.error}`,
@@ -109,10 +109,11 @@ const executePipelineFlow = ai.defineFlow(
     }
 
     return {
-      initialInputText,
+      initialInputText: initialUserText, // Use the variable from input
       initialImageDataUri,
       steps: results,
       finalOutput: currentInputText, // The output of the last agent
     };
   }
 );
+
