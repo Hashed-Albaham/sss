@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription as ShadCardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Renamed CardDescription to avoid conflict
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlusCircle, Share2, Play, Loader2, AlertTriangle, Info, ChevronsRight, Send } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from '@/components/ui/dialog'; // Added DialogTrigger
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger, DialogFooter } from '@/components/ui/dialog'; // Added DialogTrigger and DialogFooter
 import { useToast } from '@/hooks/use-toast';
 import { executePipeline } from '@/ai/flows/execute-pipeline-flow';
 import MarkdownRenderer from '@/components/common/markdown-renderer';
