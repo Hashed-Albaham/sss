@@ -78,7 +78,9 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
       <div
         className={cn(
           'p-3 rounded-lg shadow-md break-words',
-          isUser ? 'bg-accent text-accent-foreground rounded-es-none' : 'bg-card text-card-foreground border border-border rounded-ss-none'
+          isUser 
+            ? 'bg-background text-primary border border-primary/30 dark:bg-primary dark:text-primary-foreground dark:border-transparent rounded-es-none' 
+            : 'bg-card text-card-foreground border border-border rounded-ss-none'
         )}
       >
         {message.imageUrl && (
@@ -91,25 +93,23 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
         {!message.isTyping && (
           <div className={cn(
             "flex items-center text-xs mt-1.5",
-             // For RTL, justify-start will place items to the right.
-             // If the bubble is on the right (user), items appear on its right edge.
-             // If the bubble is on the left (agent), items appear on its right edge.
-             // This seems to align with how timestamps are usually shown in RTL chat.
             "justify-start" 
           )}>
-            <p className={cn( isUser ? "text-accent-foreground/70" : "text-muted-foreground/70" )}>
+            <p className={cn( isUser ? "text-primary/70 dark:text-primary-foreground/70" : "text-muted-foreground/70" )}>
               {new Date(message.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
             </p>
-            {message.content && ( // Only show copy for messages with content
+            {message.content && ( 
               <Button
                 variant="ghost"
                 size="sm" 
                 className={cn(
                   "p-1 h-auto rounded-full opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity",
-                  "ms-2", // Margin start, works for RTL to put it after the timestamp
+                  "ms-2", 
                   isCopied ? 
-                    "text-primary" : 
-                    (isUser ? "text-accent-foreground/80 hover:text-accent-foreground" : "text-muted-foreground/80 hover:text-foreground")
+                    "text-primary" : // Stays primary (green) when copied
+                    (isUser ? 
+                      "text-primary/80 hover:text-primary dark:text-primary-foreground/80 dark:hover:text-primary-foreground" : 
+                      "text-muted-foreground/80 hover:text-foreground")
                 )}
                 onClick={handleCopy}
                 aria-label="نسخ الرسالة"
@@ -123,3 +123,4 @@ export default function MessageBubble({ message, agentName, agentAvatar }: Messa
     </div>
   );
 }
+
