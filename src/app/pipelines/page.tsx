@@ -11,12 +11,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription as ShadCardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'; // Renamed CardDescription to avoid conflict
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlusCircle, Share2, Play, Loader2, AlertTriangle, Info, ChevronsRight, Send } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger, DialogFooter } from '@/components/ui/dialog'; // Added DialogTrigger and DialogFooter
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger, DialogFooter } from '@/components/ui/dialog'; 
 import { useToast } from '@/hooks/use-toast';
 import { executePipeline } from '@/ai/flows/execute-pipeline-flow';
 import MarkdownRenderer from '@/components/common/markdown-renderer';
-import Link from 'next/link'; // Added Link import
-import { Label } from '@/components/ui/label'; // Added Label import
+import Link from 'next/link'; 
+import { Label } from '@/components/ui/label'; 
 
 
 const PIPELINES_STORAGE_KEY = 'wakilPlusPipelines';
@@ -177,7 +177,7 @@ function PipelinesPageContent() {
                 {editingPipeline ? 'تعديل خط الأنابيب' : 'إنشاء خط أنابيب جديد'}
               </DialogTitle>
             </DialogHeader>
-            <ScrollArea className="flex-grow pr-6 -mr-6"> {/* Add padding for scrollbar */}
+            <ScrollArea className="flex-grow min-h-0">
               <PipelineForm
                 pipeline={editingPipeline}
                 allAgents={allAgents}
