@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
@@ -7,11 +8,22 @@ import useLocalStorage from '@/hooks/use-local-storage';
 import ChatInterface from './components/chat-interface';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bot, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Bot, MessageSquare, AlertTriangle, Eraser } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { chatWithAgent, type ChatInput } from '@/ai/flows/chat-flow'; 
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const AGENTS_STORAGE_KEY = 'wakilPlusAgents';
 const CHAT_HISTORY_PREFIX = 'wakilPlusChatHistory_';
@@ -35,6 +47,7 @@ function ChatPageContent() {
   const { toast } = useToast();
 
   const [isMounted, setIsMounted] = useState(false);
+  const [showClearChatDialog, setShowClearChatDialog] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -156,6 +169,26 @@ function ChatPageContent() {
     }
   };
 
+  const handleStartNewChatConfirmed = () => {
+    if (!selectedAgentId || !selectedAgent) return;
+
+    setCurrentMessages([]);
+    const sessionKey = `${CHAT_HISTORY_PREFIX}${selectedAgentId}`;
+    setChatSessions(prevSessions => {
+      const newSessions = { ...prevSessions };
+      if (newSessions[sessionKey]) {
+        newSessions[sessionKey].messages = [];
+        newSessions[sessionKey].lastUpdated = new Date().toISOString();
+      }
+      return newSessions;
+    });
+    toast({
+      title: "محادثة جديدة",
+      description: `تم مسح سجل المحادثة مع ${selectedAgent.name}.`,
+    });
+    setShowClearChatDialog(false);
+  };
+
   if (!isMounted) {
     return <div className="flex items-center justify-center h-full"><p className="text-muted-foreground text-lg">جارٍ تحميل واجهة المحادثة...</p></div>;
   }
@@ -208,10 +241,32 @@ function ChatPageContent() {
           </Card>
       ) : (
         <Card className="flex-1 flex flex-col bg-card overflow-hidden">
-          <CardHeader className="border-b border-border/50">
+          <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
             <CardTitle className="text-xl text-card-foreground">
               محادثة مع: <span className="text-accent">{selectedAgent?.name}</span>
             </CardTitle>
+            <AlertDialog open={showClearChatDialog} onOpenChange={setShowClearChatDialog}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" disabled={isAgentResponding}>
+                  <Eraser className="me-2 h-4 w-4" />
+                  محادثة جديدة
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>هل أنت متأكد?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    سيؤدي هذا إلى مسح سجل المحادثة الحالي مع الوكيل "{selectedAgent?.name}". لا يمكن التراجع عن هذا الإجراء.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleStartNewChatConfirmed} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                    نعم, ابدأ محادثة جديدة
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardHeader>
           <CardContent className="flex-1 p-0 overflow-hidden">
             <ChatInterface
@@ -234,3 +289,4 @@ export default function ChatPage() {
     </Suspense>
   );
 }
+
